@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mrs. Agrawal 💐</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:"Poppins", Arial, sans-serif;
+      height:100vh;
+      overflow:hidden;
+      background:#f7d9ee;
+    }
+
+    /* BACKGROUND */
+    .bg-container{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      overflow:hidden;
+    }
+
+    .bg-image, .bg-video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      opacity:0;
+      transition:opacity 1.5s ease-in-out;
+      filter: blur(1px) brightness(0.75);
+    }
+
+    .bg-image.active, .bg-video.active{
+      opacity:1;
+    }
+
+    /* TINT */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      background:linear-gradient(
+        135deg,
+        rgba(255,205,235,0.65),
+        rgba(175,120,210,0.40)
+      );
+    }
+
+    /* MUSIC BUTTON */
+    .music-toggle{
+      position:fixed;
+      top:18px;
+      right:18px;
+      z-index:50;
+      background:rgba(255,255,255,0.65);
+      border:1px solid rgba(0,0,0,0.08);
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:700;
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    /* FLOATING FLOWERS (BIGGER NOW) */
+    .flower{
+      position:absolute;
+      width:130px;
+      height:130px;
+      object-fit:contain;
+      opacity:0.95;
+      pointer-events:none;
+      filter: drop-shadow(0px 12px 24px rgba(0,0,0,0.25));
+      animation: floaty 8s ease-in-out infinite;
+      z-index:2;
+    }
+
+    @keyframes floaty{
+      0%{ transform: translateY(0px) rotate(0deg); }
+      50%{ transform: translateY(-18px) rotate(7deg); }
+      100%{ transform: translateY(0px) rotate(0deg); }
+    }
+
+    /* MAIN CONTENT */
+    .content{
+      position:relative;
+      z-index:5;
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:20px;
+      color:#4b134f;
+    }
+
+    h1{
+      font-size:70px;
+      margin:0;
+      font-weight:800;
+      text-shadow:0px 6px 20px rgba(0,0,0,0.15);
+    }
+
+    p{
+      font-size:22px;
+      max-width:850px;
+      line-height:1.5;
+      margin-top:12px;
+      margin-bottom:35px;
+      text-shadow:0px 6px 20px rgba(0,0,0,0.12);
+    }
+
+    .btn{
+      background:linear-gradient(90deg,#ff5fb8,#b45cff);
+      border:none;
+      padding:16px 36px;
+      font-size:22px;
+      font-weight:700;
+      color:white;
+      border-radius:40px;
+      cursor:pointer;
+      box-shadow:0px 12px 25px rgba(0,0,0,0.2);
+      transition:transform 0.2s ease;
+    }
+
+    .btn:hover{ transform:scale(1.06); }
+
+    /* POPUP (MULTI PAGE) */
+    .popup{
+      position:fixed;
+      inset:0;
+      z-index:100;
+      display:none;
+      justify-content:center;
+      align-items:center;
+      background:rgba(0,0,0,0.55);
+      padding:20px;
+    }
+
+    .popup-box{
+      width:min(760px, 94vw);
+      background:rgba(255,255,255,0.92);
+      border-radius:26px;
+      padding:34px 28px;
+      box-shadow:0px 25px 60px rgba(0,0,0,0.35);
+      text-align:center;
+      border:2px solid rgba(180,92,255,0.25);
+      position:relative;
+    }
+
+    .popup-box h2{
+      margin:0;
+      font-size:44px;
+      color:#4b134f;
+    }
+
+    .popup-box p{
+      margin-top:15px;
+      font-size:20px;
+      color:#5b1d60;
+      text-shadow:none;
+      margin-bottom:20px;
+    }
+
+    .row{
+      display:flex;
+      justify-content:center;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .small-btn{
+      border:none;
+      padding:14px 22px;
+      border-radius:18px;
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0px 10px 20px rgba(0,0,0,0.15);
+      transition:transform 0.15s ease;
+    }
+
+    .small-btn:hover{ transform:scale(1.05); }
+
+    .yes-btn{
+      background:linear-gradient(90deg,#ff5fb8,#b45cff);
+      color:white;
+    }
+
+    .no-btn{
+      background:rgba(75,19,79,0.12);
+      color:#4b134f;
+      border:2px solid rgba(75,19,79,0.18);
+      position:relative;
+    }
+
+    .close-btn{
+      margin-top:18px;
+      background:#4b134f;
+      color:white;
+      border:none;
+      padding:12px 22px;
+      border-radius:16px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    /* Make popup text feel like "slides" */
+    .slide{
+      display:none;
+    }
+    .slide.active{
+      display:block;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- BACKGROUND -->
+  <div class="bg-container" id="bgContainer"></div>
+
+  <!-- TINT -->
+  <div class="overlay"></div>
+
+  <!-- MUSIC BUTTON -->
+  <button class="music-toggle" id="musicBtn">🔇 Music</button>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+    <h1>Mrs. Agrawal 💐</h1>
+    <p>
+      We are here today, surrounded by all these flowers,<br>
+      to address a very important question.
+    </p>
+    <button class="btn" id="revealBtn">Find out 💗</button>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup" id="popup">
+    <div class="popup-box">
+
+      <!-- SLIDE 1 -->
+      <div class="slide active" id="slide1">
+        <h2>Mrs. Agrawal 💖</h2>
+        <p>
+          With all these memories and all this love…<br>
+          I have only one thing to ask you.
+        </p>
+        <button class="btn" id="toSlide2">Next 💗</button>
+      </div>
+
+      <!-- SLIDE 2 (YES / NO) -->
+      <div class="slide" id="slide2">
+        <h2>Will you be my Valentine? 💘</h2>
+        <p>
+          Choose wisely, Sumu 😌💗
+        </p>
+
+        <div class="row">
+          <button class="small-btn yes-btn" id="yesBtn">YES 💞</button>
+          <button class="small-btn no-btn" id="noBtn">NO 🙄</button>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 (AFTER YES) -->
+      <div class="slide" id="slide3">
+        <h2>YAYYYYY 💖💖💖</h2>
+        <p>
+          Okay Mrs. Agrawal…<br>
+          now you’re stuck with me 😌💍<br><br>
+          I love you, Urvv 💗
+        </p>
+        <button class="close-btn" id="closePopup">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BACKGROUND MUSIC -->
+  <audio id="bgMusic" loop>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // ===== SETTINGS =====
+    const totalMemories = 10; // m1.jpeg ... m10.jpeg
+    const totalFlowers = 7;   // f1.jpeg ... f7.jpeg
+    const totalVideos = 2;    // v1.mp4 ... v2.mp4
+
+    // ===== BACKGROUND CREATION =====
+    const bgContainer = document.getElementById("bgContainer");
+
+    // Create background images
+    let bgImages = [];
+    for (let i = 1; i <= totalMemories; i++) {
+      const img = document.createElement("img");
+      img.src = `memories/m${i}.jpeg`;
+      img.className = "bg-image";
+      bgContainer.appendChild(img);
+      bgImages.push(img);
+    }
+
+    // Create background videos
+    let bgVideos = [];
+    for (let i = 1; i <= totalVideos; i++) {
+      const vid = document.createElement("video");
+      vid.src = `videos/v${i}.mp4`;
+      vid.className = "bg-video";
+      vid.muted = true;
+      vid.loop = true;
+      vid.playsInline = true;
+      bgContainer.appendChild(vid);
+      bgVideos.push(vid);
+    }
+
+    // ===== BACKGROUND LOGIC =====
+    let currentIndex = 0;
+    let usingVideo = false;
+
+    function showMemory(index) {
+      usingVideo = false;
+
+      // hide videos
+      bgVideos.forEach(v => {
+        v.classList.remove("active");
+        v.pause();
+      });
+
+      // show images
+      bgImages.forEach(img => img.classList.remove("active"));
+      bgImages[index].classList.add("active");
+    }
+
+    function maybeShowVideo() {
+      // 25% chance to show a video instead of image
+      const chance = Math.random();
+      if (chance < 0.25) {
+        usingVideo = true;
+
+        // hide all images
+        bgImages.forEach(img => img.classList.remove("active"));
+
+        // pick random video
+        const randomVid = bgVideos[Math.floor(Math.random() * bgVideos.length)];
+        bgVideos.forEach(v => {
+          v.classList.remove("active");
+          v.pause();
+        });
+
+        randomVid.classList.add("active");
+        randomVid.play();
+      }
+    }
+
+    // Start
+    showMemory(currentIndex);
+
+    // Change background every 6 seconds
+    setInterval(() => {
+      if (!usingVideo) {
+        currentIndex = (currentIndex + 1) % bgImages.length;
+        showMemory(currentIndex);
+        maybeShowVideo();
+      } else {
+        // if video is playing, switch back to images after 10 sec
+        setTimeout(() => {
+          usingVideo = false;
+          currentIndex = (currentIndex + 1) % bgImages.length;
+          showMemory(currentIndex);
+        }, 10000);
+      }
+    }, 6000);
+
+    // ===== FLOWERS (BIGGER + MORE SPREAD) =====
+    for (let i = 1; i <= totalFlowers; i++) {
+      const flower = document.createElement("img");
+      flower.src = `flowers/f${i}.jpeg`;
+      flower.className = "flower";
+
+      flower.style.left = Math.random() * 88 + "vw";
+      flower.style.top = Math.random() * 80 + "vh";
+      flower.style.animationDelay = (Math.random() * 5) + "s";
+
+      document.body.appendChild(flower);
+    }
+
+    // ===== POPUP SLIDES =====
+    const popup = document.getElementById("popup");
+    const slide1 = document.getElementById("slide1");
+    const slide2 = document.getElementById("slide2");
+    const slide3 = document.getElementById("slide3");
+
+    function showSlide(slideNum){
+      slide1.classList.remove("active");
+      slide2.classList.remove("active");
+      slide3.classList.remove("active");
+
+      if(slideNum === 1) slide1.classList.add("active");
+      if(slideNum === 2) slide2.classList.add("active");
+      if(slideNum === 3) slide3.classList.add("active");
+    }
+
+    document.getElementById("revealBtn").onclick = () => {
+      popup.style.display = "flex";
+      showSlide(1);
+    };
+
+    document.getElementById("toSlide2").onclick = () => {
+      showSlide(2);
+    };
+
+    document.getElementById("yesBtn").onclick = () => {
+      showSlide(3);
+    };
+
+    // NO button runs away
+    const noBtn = document.getElementById("noBtn");
+    noBtn.addEventListener("mouseenter", () => {
+      const popupBox = document.querySelector(".popup-box");
+      const boxRect = popupBox.getBoundingClientRect();
+
+      // random position INSIDE popup box
+      const newX = Math.random() * (boxRect.width - 140);
+      const newY = Math.random() * (boxRect.height - 80);
+
+      noBtn.style.position = "absolute";
+      noBtn.style.left = newX + "px";
+      noBtn.style.top = newY + "px";
+    });
+
+    // Close popup
+    document.getElementById("closePopup").onclick = () => {
+      popup.style.display = "none";
+    };
+
+    // ===== MUSIC =====
+    const bgMusic = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+    let musicPlaying = false;
+
+    musicBtn.onclick = () => {
+      if (!musicPlaying) {
+        bgMusic.play();
+        musicPlaying = true;
+        musicBtn.innerText = "🔊 Music";
+      } else {
+        bgMusic.pause();
+        musicPlaying = false;
+        musicBtn.innerText = "🔇 Music";
+      }
+    };
+  </script>
+
+</body>
+</html>
